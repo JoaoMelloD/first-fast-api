@@ -9,11 +9,16 @@ export class TransactionRepository {
       type,
     });
   }
-
+  async getOneTransaction(id: string) {
+    return knex("transactions").where("id", id).first();
+  }
   async list() {
     return await knex.select("*").from("transactions");
   }
 
+  async summaryAmount() {
+    return await knex("transactions").sum("amount", { as: "amount" });
+  }
   async update(
     id: string,
     title?: string,
