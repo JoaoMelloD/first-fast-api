@@ -3,6 +3,7 @@ import { knex } from "../database";
 import { success, z } from "zod";
 import { randomUUID } from "crypto";
 import { TransactionRepository } from "../repository/TransactionRepository";
+import { checkSessionIdExist } from "../middlewares/check-session-id-exists";
 export async function transactionRoutes(app: FastifyInstance) {
   const createTransactionBodySchema = z.object({
     title: z.string(),
@@ -19,7 +20,19 @@ export async function transactionRoutes(app: FastifyInstance) {
       const { title, amount, type } = createTransactionBodySchema.parse(
         request.body
       );
-      const data = await repo.create(title, amount, type);
+
+      let sessionId = request.cookies.sessionId;
+
+      if (!sessionId) {
+        sessionId = randomUUID();
+
+        reply.cookie("sessionId", sessionId, {
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7, //7 Days
+        });
+      }
+      console.log("Passou aqui");
+      const data = await repo.create(title, amount, type, sessionId!);
       return reply.status(201).send({
         success: true,
         data: data,
@@ -33,82 +46,117 @@ export async function transactionRoutes(app: FastifyInstance) {
     }
   });
 
-  app.get("/", async (request, reply) => {
-    try {
-      const data = await repo.list();
+  app.get(
+    "/",
+    { preHandler: [checkSessionIdExist] },
+    async (request, reply) => {
+      try {
+        const sessionId = request.cookies.sessionId;
+
+        if (!sessionId) {
+          return reply.status(401).send({
+            success: false,
+            message: "Unauthorized",
+          });
+        }
+
+        const data = await repo.list(sessionId);
+        return reply.status(201).send({
+          success: true,
+          data: data,
+        });
+      } catch (err) {
+        request.log.error(err);
+        return reply.status(500).send({
+          success: false,
+          message: "Erro Interno",
+        });
+      }
+    }
+  );
+
+  app.get(
+    "/:id",
+
+    { preHandler: [checkSessionIdExist] },
+    async (request, reply) => {
+      try {
+        const sessionId = request.cookies.sessionId;
+        const { id } = paramsSchema.parse(request.params);
+
+        const data = await repo.getOneTransaction(id, sessionId!);
+        return reply.status(201).send({
+          success: true,
+          data: data,
+        });
+      } catch (err) {
+        request.log.error(err);
+        return reply.status(500).send({
+          success: false,
+          message: "Erro Interno",
+        });
+      }
+    }
+  );
+
+  app.get(
+    "/summary",
+    { preHandler: [checkSessionIdExist] },
+    async (request, reply) => {
+      const sessionId = request.cookies.sessionId;
+      const data = await repo.summaryAmount(sessionId!);
       return reply.status(201).send({
         success: true,
         data: data,
       });
-    } catch (err) {
-      request.log.error(err);
-      return reply.status(500).send({
-        success: false,
-        message: "Erro Interno",
-      });
     }
-  });
+  );
 
-  app.get("/:id", async (request, reply) => {
-    try {
-      const { id } = paramsSchema.parse(request.params);
-      const data = await repo.getOneTransaction(id);
-      return reply.status(201).send({
-        success: true,
-        data: data,
-      });
-    } catch (err) {
-      request.log.error(err);
-      return reply.status(500).send({
-        success: false,
-        message: "Erro Interno",
-      });
+  app.put(
+    "/:id",
+    { preHandler: [checkSessionIdExist] },
+    async (request, reply) => {
+      try {
+        const sessionId = request.cookies.sessionId;
+        //id é uma string
+        const { title, amount, type } = createTransactionBodySchema.parse(
+          request.body
+        );
+        const { id } = paramsSchema.parse(request.params);
+        const data = repo.update(id, sessionId!, title, amount, type);
+        return reply.status(201).send({
+          success: true,
+          data: data,
+        });
+      } catch (err) {
+        request.log.error(err);
+        return reply.status(500).send({
+          success: false,
+          message: "Erro Interno",
+        });
+      }
     }
-  });
+  );
 
-  app.get("/summary", async (request, reply) => {
-    const data = await repo.summaryAmount();
-    return reply.status(201).send({
-      success: true,
-      data: data,
-    });
-  });
-
-  app.put("/:id", async (request, reply) => {
-    try {
-      //id é uma string
-      const { title, amount, type } = createTransactionBodySchema.parse(
-        request.body
-      );
-      const { id } = paramsSchema.parse(request.params);
-      const data = repo.update(id, title, amount, type);
-      return reply.status(201).send({
-        success: true,
-        data: data,
-      });
-    } catch (err) {
-      request.log.error(err);
-      return reply.status(500).send({
-        success: false,
-        message: "Erro Interno",
-      });
+  app.delete(
+    "/:id",
+    { preHandler: [checkSessionIdExist] },
+    async (request, reply) => {
+      try {
+        const sessionId = request.cookies.sessionId;
+        const { id } = paramsSchema.parse(request.params);
+        const data = repo.delete(id, sessionId!);
+        return reply.status(201).send({
+          success: true,
+          data: data,
+        });
+      } catch (err) {
+        request.log.error(err);
+        return reply.status(500).send({
+          success: false,
+          message: "Erro Interno",
+        });
+      }
     }
-  });
-
-  app.delete("/:id", async (request, reply) => {
-    try {
-      const { id } = paramsSchema.parse(request.params);
-      const data = repo.delete(id);
-      return reply.status(201).send({
-        success: true,
-        data: data,
-      });
-    } catch (err) {
-      request.log.error(err);
-      return reply.status(500).send({
-        success: false,
-        message: "Erro Interno",
-      });
-    }
-  });
+  );
 }
