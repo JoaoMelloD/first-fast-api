@@ -1,18 +1,6 @@
-import Fastify from "fastify";
-import { knex } from "./database";
-import cookie from "@fastify/cookie";
+import { app } from "./app";
 import { env } from "./env";
-import { transactionRoutes } from "./routes/transactions";
-const app = Fastify();
 
-app.register(cookie);
-
-app.register(transactionRoutes, {
-  prefix: "transactions",
-});
-/**
- * Run the server!
- */
 const start = async () => {
   try {
     await app.listen({ port: env.PORT });

@@ -5,11 +5,15 @@ import { randomUUID } from "crypto";
 import { TransactionRepository } from "../repository/TransactionRepository";
 import { checkSessionIdExist } from "../middlewares/check-session-id-exists";
 export async function transactionRoutes(app: FastifyInstance) {
+  app.addHook("preHandler", async (request, response) => {
+    
+  });
   const createTransactionBodySchema = z.object({
     title: z.string(),
     amount: z.number(),
     type: z.enum(["debit", "credit"]),
   });
+
   const repo = new TransactionRepository();
   const paramsSchema = z.object({
     id: z.string().uuid(),
@@ -31,8 +35,7 @@ export async function transactionRoutes(app: FastifyInstance) {
           maxAge: 60 * 60 * 24 * 7, //7 Days
         });
       }
-      console.log("Passou aqui");
-      const data = await repo.create(title, amount, type, sessionId!);
+      const data = await repo.create(title, amount, type, sessionId);
       return reply.status(201).send({
         success: true,
         data: data,

@@ -7,7 +7,7 @@ declare module "knex/types/tables" {
       amount: number;
       type: string;
       created_at: string;
-      session_id?: string;
+      session_id: string;
     };
   }
 }
