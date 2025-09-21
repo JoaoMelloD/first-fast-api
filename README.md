@@ -87,6 +87,35 @@ No exemplo acima, teoricamente ele estaria simulando uma requisição do cliente
 
 - Para realizar ações ao servidor, é necessário utilizar de uma ferramenta chamada _supertest_ para que não precisemos criar o servidor novament dentro do teste.
 - A dica dessa aula é modularizar o app.ts do server.ts, aonde no arquivo server.ts deixamos tudo a partir do app.listen e modularizamos toda a instanciação do app para um arquivo externo e o importamos no servidor.
-O resultado disso => Quando formos realizar o teste, podemos chamar a instancia de app sem que seja necessário chamar o listen do servidor.
+  O resultado disso => Quando formos realizar o teste, podemos chamar a instancia de app sem que seja necessário chamar o listen do servidor.
 - Com isso, possibilito que eu tenha acessoa a minha aplicação sem precisar subir um servidor para ela.
 - Antes de realizar um teste, eu preciso assegurar que minha aplciação terminou de carregar todos os seus plugins.
+
+### Categorizando Testes da Aplicação
+
+- Posso criar categorias dentro da minha aplicação usando o método _describe_ do vitest que me permite agrupar e deixar meu log mais limpo de testes e mais infomartivo.
+- Outro detalhe importante, pode ser encontrado no lucar do _teste_ a declaração usando _it_ na hora de declarar um teste, o resultado final é o mesmo.
+
+### Testando Listagem de transações
+
+**REGRA**
+
+- Todo teste deve se excluir de qualquer contexto, ou seja
+  eu jamais posso escrever um teste que dependa de outro teste, se um teste depende de outro, eles deveriam ser o mesmo teste.
+- Ou seja, sempre que formos criar um teste, temos que sair do principio que outros testes não existem!.
+
+### Configurando Banco de Testes
+
+- Basicamente um banco de dados para testes, pois quando rodamos os testes eles realizam uma ação no banco.
+- O ideal seria que fosse em um ambiente limpo.
+
+### Finalizando os testes da aplicação.
+
+- O teste deve se adaptar ao código ao invés do contrário.
+
+### Preparando para o deploy
+- Configurar o projeto e coloca-lo no ar
+( Nenhuma plataforma que hospeda node na nuvem suporta typescript, ou seja é necessário buildarmos para javascrip nativamente.)
+- Builando pela maneira nativa utilizando o `npx tsc` ele demora consideravelmente para buildar, ainda mais para projetos maiores.
+- Na aula é recomendado a utilização de `tsup` para instala-lo basta usar `npm install tsup -D`
+- Após isso, vou no meu arquivo  `package.json` e adiciono o script de build pra rodar: `"build": "tscup src -d build",`

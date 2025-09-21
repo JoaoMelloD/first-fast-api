@@ -5,9 +5,7 @@ import { randomUUID } from "crypto";
 import { TransactionRepository } from "../repository/TransactionRepository";
 import { checkSessionIdExist } from "../middlewares/check-session-id-exists";
 export async function transactionRoutes(app: FastifyInstance) {
-  app.addHook("preHandler", async (request, response) => {
-    
-  });
+  app.addHook("preHandler", async (request, response) => {});
   const createTransactionBodySchema = z.object({
     title: z.string(),
     amount: z.number(),
@@ -36,6 +34,7 @@ export async function transactionRoutes(app: FastifyInstance) {
         });
       }
       const data = await repo.create(title, amount, type, sessionId);
+
       return reply.status(201).send({
         success: true,
         data: data,

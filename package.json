@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "knex": "node --import tsx ./node_modules/.bin/knex",
-    "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
+    "build": "tsup src -d build",
     "test": "vitest"
   },
   "keywords": [],
@@ -34,6 +34,7 @@
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
